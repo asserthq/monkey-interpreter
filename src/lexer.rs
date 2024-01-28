@@ -1,4 +1,9 @@
-pub struct Token {}
+#[derive(Debug, PartialEq)]
+pub enum Token {
+    Unknown,
+    Eof,
+}
+
 pub struct Lexer {}
 
 impl Lexer {
@@ -6,8 +11,8 @@ impl Lexer {
         Self {}
     }
 
-    pub fn next_token(&self) -> &str {
-        ""
+    pub fn next_token(&self) -> Token {
+        Token::Eof
     }
 }
 
@@ -16,8 +21,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_token_on_empty_input() {
+    fn eof_token_on_empty_input() {
         let lexer = Lexer::new("");
-        assert_eq!(lexer.next_token(), "");
+        assert_eq!(lexer.next_token(), Token::Eof);
     }
 }
