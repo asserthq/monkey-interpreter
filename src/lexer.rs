@@ -48,7 +48,7 @@ impl<'a> Lexer<'a> {
         Self {
             input,
             pos: 0,
-            sym: None,
+            sym: input.chars().next(),
         }
     }
 
