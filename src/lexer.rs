@@ -2,6 +2,39 @@
 pub enum Token {
     Unknown,
     Eof,
+
+    LParen,
+    RParen,
+    LBrace,
+    RBrace,
+
+    Comma,
+    Semicolon,
+
+    Assign,
+    Plus,
+    Minus,
+}
+
+impl Token {
+    pub fn from_string(input: &str) -> Token {
+        use Token::*;
+        match input {
+            "(" => LParen,
+            ")" => RParen,
+            "{" => LBrace,
+            "}" => RBrace,
+
+            "," => Comma,
+            ";" => Semicolon,
+
+            "=" => Assign,
+            "+" => Plus,
+            "-" => Minus,
+
+            _ => Unknown,
+        }
+    }
 }
 
 pub struct Lexer<'a> {
@@ -26,6 +59,10 @@ impl<'a> Lexer<'a> {
         let tok = Token::Unknown;
         self.pos += 1;
         tok
+    }
+
+    fn next_sym(&mut self) -> Option<char> {
+        self.input.chars().nth(self.pos)
     }
 }
 
