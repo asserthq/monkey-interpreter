@@ -7,20 +7,25 @@ pub enum Token {
 pub struct Lexer<'a> {
     input: &'a str,
     pos: usize,
+    sym: Option<char>,
 }
 
 impl<'a> Lexer<'a> {
     pub fn new(input: &'a str) -> Self {
-        Self { input, pos: 0 }
+        Self {
+            input,
+            pos: 0,
+            sym: None,
+        }
     }
 
     pub fn next_token(&mut self) -> Token {
-        if self.pos < self.input.len() {
-            self.pos += self.input.len();
-            Token::Unknown
-        } else {
-            Token::Eof
+        if self.pos >= self.input.len() {
+            return Token::Eof;
         }
+        let tok = Token::Unknown;
+        self.pos += 1;
+        tok
     }
 }
 
@@ -35,10 +40,13 @@ mod tests {
     }
 
     #[test]
-    fn unknown_token_then_eof() {
+    fn unknown_tokens_until_eof() {
         let mut lexer = Lexer::new("some unknown mess");
-        assert_eq!(lexer.next_token(), Token::Unknown);
-        assert_eq!(lexer.next_token(), Token::Eof);
+        let mut tok = lexer.next_token();
+        while tok != Token::Eof {
+            assert_eq!(tok, Token::Unknown);
+            tok = lexer.next_token();
+        }
     }
 
     #[test]
