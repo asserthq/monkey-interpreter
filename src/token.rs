@@ -14,6 +14,14 @@ pub enum Token {
     Assign,
     Plus,
     Minus,
+    Asterisk,
+    Slash,
+
+    GT,
+    LT,
+
+    Eq,
+    NotEq,
 
     Let,
     Function,
@@ -37,8 +45,32 @@ impl Token {
             '=' => Assign,
             '+' => Plus,
             '-' => Minus,
+            '*' => Asterisk,
+            '/' => Slash,
+            
+            '>' => GT,
+            '<' => LT,
 
             _ => Unknown,
+        }
+    }
+
+    pub fn from_two_chars(first: char, second: char) -> Token {
+        use Token::*;
+        match (first, second) {
+            ('=', '=') => Eq,
+            ('!', '=') => NotEq,
+
+            _ => Unknown,
+        }
+    }
+
+    pub fn from_string(literal: String) -> Token {    
+        use Token::*;
+        match literal.as_str() {
+            "let" => Let,
+            "fn" => Function,
+            _ => Ident(literal)
         }
     }
 }

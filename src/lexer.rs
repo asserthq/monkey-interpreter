@@ -24,7 +24,7 @@ impl Lexer {
             None => (),
             Some(sym) if can_be_in_identifier(sym) => {
                 let ident_literal = self.read_identifier();
-                tok = lookup_identifier(ident_literal);
+                tok = Token::from_string(ident_literal);
             }
             Some(sym) if sym.is_ascii_digit() => {
                 let int_literal = self.read_integer();
@@ -81,14 +81,6 @@ fn can_be_in_identifier(sym: char) -> bool {
     sym.is_alphabetic() || sym == '_'     
 }
 
-fn lookup_identifier(literal: String) -> Token {    
-    use Token::*;
-    match literal.as_str() {
-        "let" => Let,
-        "fn" => Function,
-        _ => Ident(literal)
-    }
-}
 
 #[cfg(test)]
 mod tests {
