@@ -1,7 +1,7 @@
 use crate::token::Token;
 
-pub struct Lexer{
-    input: String,
+pub struct Lexer {
+    input_chars: Vec<char>,
     pos: usize,
     sym: Option<char>,
     next_sym: Option<char>
@@ -9,10 +9,8 @@ pub struct Lexer{
 
 impl Lexer {
     pub fn new(input: &str) -> Self {
-        println!("input:");
-        println!("{input}");
         Self {
-            input: input.to_string(),
+            input_chars: input.chars().collect(),
             pos: 0,
             sym: input.chars().next(),
             next_sym: input.chars().nth(1)
@@ -61,7 +59,7 @@ impl Lexer {
     fn read_sym(&mut self) {
         self.pos += 1;
         self.sym = self.next_sym;
-        self.next_sym = self.input.chars().nth(self.pos + 1);
+        self.next_sym = self.input_chars.get(self.pos + 1).copied();
     }
 
     fn read_identifier(&mut self) -> String {
