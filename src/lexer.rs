@@ -4,6 +4,7 @@ pub struct Lexer{
     input: String,
     pos: usize,
     sym: Option<char>,
+    next_sym: Option<char>
 }
 
 impl Lexer {
@@ -14,6 +15,7 @@ impl Lexer {
             input: input.to_string(),
             pos: 0,
             sym: input.chars().next(),
+            next_sym: input.chars().nth(1)
         }
     }
 
@@ -31,6 +33,9 @@ impl Lexer {
                 tok = Token::Int(int_literal);
             }
             Some(sym) => {
+                if can_begin_two_chars_token(sym) {
+                    
+                }
                 tok = Token::from_single_char(sym);
                 self.read_sym();
             }
@@ -49,6 +54,7 @@ impl Lexer {
 
     fn read_sym(&mut self) {
         self.pos += 1;
+        self.next_sym = self.sym;
         self.sym = self.input.chars().nth(self.pos);
     }
 
@@ -79,6 +85,10 @@ impl Lexer {
 
 fn can_be_in_identifier(sym: char) -> bool {
     sym.is_alphabetic() || sym == '_'     
+}
+
+fn can_begin_two_chars_token(ch: char) -> bool {
+    ch == '=' || ch == '!'
 }
 
 
