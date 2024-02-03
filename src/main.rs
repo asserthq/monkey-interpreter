@@ -1,11 +1,9 @@
 pub mod token;
 pub mod lexer;
+pub mod repl;
 
-fn main() {
-    println!("Hello, world!");
-}
-
-#[cfg(test)]
-mod tests {
-
+fn main() -> std::io::Result<()> {
+    println!("Hello, monkey!");
+    repl::start()?;
+    Ok(())
 }
