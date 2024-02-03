@@ -20,27 +20,33 @@ impl Lexer {
     }
 
     pub fn next_token(&mut self) -> Token {
-        let mut tok: Token = Token::Eof;
         self.skip_whitespaces();
         match self.sym {
-            None => (),
+            None => Token::Eof,
             Some(sym) if can_be_in_identifier(sym) => {
                 let ident_literal = self.read_identifier();
-                tok = Token::from_string(ident_literal);
+                Token::from_string(ident_literal)
             }
             Some(sym) if sym.is_ascii_digit() => {
                 let int_literal = self.read_integer();
-                tok = Token::Int(int_literal);
+                Token::Int(int_literal)
             }
             Some(sym) => {
+                let mut tok = Token::Unknown;
                 if can_begin_two_chars_token(sym) {
-                    
+                    if let Some(next_sym) = self.next_sym {
+                        tok = Token::from_two_chars(sym, next_sym);
+                    }
                 }
-                tok = Token::from_single_char(sym);
+                if tok != Token::Unknown {
+                    self.read_sym();
+                } else {
+                    tok = Token::from_single_char(sym);
+                }
                 self.read_sym();
+                tok
             }
-        };
-        tok
+        }
     }
 
     fn skip_whitespaces(&mut self) {
@@ -54,8 +60,8 @@ impl Lexer {
 
     fn read_sym(&mut self) {
         self.pos += 1;
-        self.next_sym = self.sym;
-        self.sym = self.input.chars().nth(self.pos);
+        self.sym = self.next_sym;
+        self.next_sym = self.input.chars().nth(self.pos + 1);
     }
 
     fn read_identifier(&mut self) -> String {
@@ -112,13 +118,17 @@ mod tests {
     #[test]
     fn tokenize_single_character_tokens() {
         use Token::*;
-        let input = "=; ({^ })+-,%";
+        let input = "=; ({^ <>/*})+-,%";
         let check = vec![
             Assign, 
             Semicolon,
             LParen,
             LBrace,
             Unknown,
+            LT,
+            GT,
+            Slash,
+            Asterisk,
             RBrace,
             RParen,
             Plus,
@@ -126,7 +136,7 @@ mod tests {
             Comma,
             Unknown
         ];
-        let mut tokens: Vec<Token> = Vec::with_capacity(11);
+        let mut tokens: Vec<Token> = Vec::with_capacity(16);
         let mut lexer = Lexer::new(input); 
         let mut tok = lexer.next_token();
         while tok != Token::Eof {
@@ -137,7 +147,50 @@ mod tests {
     }
 
     #[test]
+    fn tokenize_two_characters_tokens() {
+        use Token::*;
+        let input = "== !=";
+        let check = vec![
+            Eq,
+            NotEq,
+        ];
+        let mut tokens: Vec<Token> = Vec::with_capacity(2);
+        let mut lexer = Lexer::new(input);
+        let mut tok = lexer.next_token();
+        while tok != Token::Eof {
+            tokens.push(tok);
+            tok = lexer.next_token();
+        }
+        assert_eq!(tokens, check);
+    }
+    
+    #[test]
     fn tokenize_multi_character_tokens() {
+        use Token::*;
+        let input = r#"
+            let five 5
+            fn ten 10
+        "#;
+        let check = vec![
+            Let,
+            Ident("five".into()),
+            Int("5".into()),
+            Function,
+            Ident("ten".into()),
+            Int("10".into())
+        ];
+        let mut tokens: Vec<Token> = Vec::with_capacity(64);
+        let mut lexer = Lexer::new(input); 
+        let mut tok = lexer.next_token();
+        while tok != Token::Eof {
+            tokens.push(tok);
+            tok = lexer.next_token();
+        }
+        assert_eq!(tokens, check);
+    }
+
+    #[test]
+    fn tokenize_all_tokens() {
         use Token::*;
         let input = r#"
             let five = 5;
@@ -146,6 +199,8 @@ mod tests {
                 x + y;
             };
             let result = add(five, ten);
+            let a = 10<y >z/-*==;
+            24 != 23
         "#;
         let check = vec![
             Let,
@@ -183,9 +238,25 @@ mod tests {
             Comma, 
             Ident("ten".into()),
             RParen,
-            Semicolon
+            Semicolon,
+            Let,
+            Ident("a".into()),
+            Assign,
+            Int("10".into()),
+            LT,
+            Ident("y".into()),
+            GT,
+            Ident("z".into()),
+            Slash,
+            Minus,
+            Asterisk,
+            Eq,
+            Semicolon,
+            Int("24".into()),
+            NotEq,
+            Int("23".into())
         ];
-        let mut tokens: Vec<Token> = Vec::with_capacity(40);
+        let mut tokens: Vec<Token> = Vec::with_capacity(64);
         let mut lexer = Lexer::new(input); 
         let mut tok = lexer.next_token();
         while tok != Token::Eof {
