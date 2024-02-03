@@ -1,47 +1,4 @@
-#[derive(Debug, PartialEq)]
-pub enum Token {
-    Unknown,
-    Eof,
-
-    LParen,
-    RParen,
-    LBrace,
-    RBrace,
-
-    Comma,
-    Semicolon,
-
-    Assign,
-    Plus,
-    Minus,
-
-    Let,
-    Function,
-
-    Ident(String),
-    Int(String)
-}
-
-impl Token {
-    pub fn from_string(input: String) -> Token {
-        use Token::*;
-        match input.as_str() {
-            "(" => LParen,
-            ")" => RParen,
-            "{" => LBrace,
-            "}" => RBrace,
-
-            "," => Comma,
-            ";" => Semicolon,
-
-            "=" => Assign,
-            "+" => Plus,
-            "-" => Minus,
-
-            _ => Unknown,
-        }
-    }
-}
+use crate::token::Token;
 
 pub struct Lexer{
     input: String,
@@ -51,6 +8,8 @@ pub struct Lexer{
 
 impl Lexer {
     pub fn new(input: &str) -> Self {
+        println!("input:");
+        println!("{input}");
         Self {
             input: input.to_string(),
             pos: 0,
@@ -59,19 +18,75 @@ impl Lexer {
     }
 
     pub fn next_token(&mut self) -> Token {
-        let tok = match self.sym {
-            None => Token::Eof,
+        let mut tok: Token = Token::Eof;
+        self.skip_whitespaces();
+        match self.sym {
+            None => (),
+            Some(sym) if can_be_in_identifier(sym) => {
+                let ident_literal = self.read_identifier();
+                tok = lookup_identifier(ident_literal);
+            }
+            Some(sym) if sym.is_ascii_digit() => {
+                let int_literal = self.read_integer();
+                tok = Token::Int(int_literal);
+            }
             Some(sym) => {
-                Token::from_string(sym.to_string())
+                tok = Token::from_string(sym.to_string());
+                self.read_sym();
             }
         };
-        self.pos += 1;
-        self.sym = self.next_sym();
         tok
     }
 
-    fn next_sym(&mut self) -> Option<char> {
-        self.input.chars().nth(self.pos)
+    fn skip_whitespaces(&mut self) {
+        while let Some(sym) = self.sym {
+            if !sym.is_whitespace() {
+                break;
+            }
+            self.read_sym();
+        }
+    }
+
+    fn read_sym(&mut self) {
+        self.pos += 1;
+        self.sym = self.input.chars().nth(self.pos);
+    }
+
+    fn read_identifier(&mut self) -> String {
+        let mut ident = String::new();
+        while let Some(sym) = self.sym {
+            if !can_be_in_identifier(sym) {
+                break;
+            }
+            ident.push(sym);
+            self.read_sym();
+        }
+        ident
+    }
+
+    fn read_integer(&mut self) -> String {
+        let mut num = String::new();
+        while let Some(sym) = self.sym {
+            if !sym.is_ascii_digit() {
+                break;
+            }
+            num.push(sym);
+            self.read_sym();
+        }
+        num
+    }
+}
+
+fn can_be_in_identifier(sym: char) -> bool {
+    sym.is_alphabetic() || sym == '_'     
+}
+
+fn lookup_identifier(literal: String) -> Token {    
+    use Token::*;
+    match literal.as_str() {
+        "let" => Let,
+        "fn" => Function,
+        _ => Ident(literal)
     }
 }
 
@@ -86,16 +101,6 @@ mod tests {
     }
 
     #[test]
-    fn unknown_tokens_until_eof() {
-        let mut lexer = Lexer::new("some unknown mess");
-        let mut tok = lexer.next_token();
-        while tok != Token::Eof {
-            assert_eq!(tok, Token::Unknown);
-            tok = lexer.next_token();
-        }
-    }
-
-    #[test]
     fn always_eof_after_lexing() {
         let mut lexer = Lexer::new("let a = 5;");
         while lexer.next_token() != Token::Eof {}
@@ -105,11 +110,9 @@ mod tests {
     #[test]
     fn tokenize_single_character_tokens() {
         use Token::*;
-        let input = "a=5;({ })+-,";
+        let input = "=; ({^ })+-,%";
         let check = vec![
-            Unknown,
             Assign, 
-            Unknown,
             Semicolon,
             LParen,
             LBrace,
@@ -118,9 +121,10 @@ mod tests {
             RParen,
             Plus,
             Minus,
-            Comma
+            Comma,
+            Unknown
         ];
-        let mut tokens: Vec<Token> = Vec::with_capacity(12);
+        let mut tokens: Vec<Token> = Vec::with_capacity(11);
         let mut lexer = Lexer::new(input); 
         let mut tok = lexer.next_token();
         while tok != Token::Eof {
