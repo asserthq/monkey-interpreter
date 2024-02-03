@@ -23,20 +23,20 @@ pub enum Token {
 }
 
 impl Token {
-    pub fn from_string(input: String) -> Token {
+    pub fn from_single_char(ch: char) -> Token {
         use Token::*;
-        match input.as_str() {
-            "(" => LParen,
-            ")" => RParen,
-            "{" => LBrace,
-            "}" => RBrace,
+        match ch {
+            '(' => LParen,
+            ')' => RParen,
+            '{' => LBrace,
+            '}' => RBrace,
 
-            "," => Comma,
-            ";" => Semicolon,
+            ',' => Comma,
+            ';' => Semicolon,
 
-            "=" => Assign,
-            "+" => Plus,
-            "-" => Minus,
+            '=' => Assign,
+            '+' => Plus,
+            '-' => Minus,
 
             _ => Unknown,
         }

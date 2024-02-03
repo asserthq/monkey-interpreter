@@ -31,7 +31,7 @@ impl Lexer {
                 tok = Token::Int(int_literal);
             }
             Some(sym) => {
-                tok = Token::from_string(sym.to_string());
+                tok = Token::from_single_char(sym);
                 self.read_sym();
             }
         };
